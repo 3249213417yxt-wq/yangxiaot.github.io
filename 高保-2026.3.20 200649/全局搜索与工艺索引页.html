@@ -1,0 +1,358 @@
+
+                <!DOCTYPE html>
+                <html lang="zh">
+                <head>
+                  <meta charset="UTF-8">
+                  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                  <meta name="color-scheme" content="light">
+                  <meta name="supported-color-schemes" content="light">
+                  <title>全局搜索与工艺索引页</title>
+                  <style>
+                    *,
+                    *::before,
+                    *::after {
+                      box-sizing: border-box;
+                      margin: 0;
+                    }
+                    .iframe-outer {
+                      position: fixed;
+                      top: 0;
+                      left: 0;
+                      bottom: 0;
+                      right: 0;
+                      display: flex;
+                      justify-content: center;
+                      background-color: #E0E0E0;
+                    }
+                    .iframe-wrapper {
+                      width: 100%;
+                      height: 100%;
+                      margin: 0 auto;
+                      transform-origin: center top;
+                      flex-shrink: 0;
+                    }
+                    #dynamicIframe {
+                      border: none;
+                      width: 100%;
+                      height: 100%;
+                    }
+                  </style>
+                  <script>
+                const width = 1920
+                const height = 1080
+                const resolutionRatio = width && height ? width / height : 1
+                const pageNameMap = {
+                  'home_page': '首页·初识花丝镶嵌',
+    'craft_deconstruction': '工艺解构页',
+    'simulation_workshop': '模拟体验页·沉浸工坊',
+    'artwork_detail': '作品详情页',
+    'community_co_creation': '共创社区页',
+    'user_profile': '个人中心·我的工坊',
+    'global_search_index': '全局搜索与工艺索引页',
+    'page_2662785': '',
+    'page_2662863': '问答社区页',
+    'page_2666341': ' 材料工具包页',
+    'page_2666458': '学习笔记页',
+    'page_2666459': '游戏化任务页',
+    'page_2666516': '工艺文化百科页',
+    'page_2666557': '工具说明书页',
+    'page_2666558': '工艺拼图/解谜页',
+    'page_2666559': '名师专栏页',
+    'page_2666733': '举报/反馈页',
+    'page_2666734': '私信聊天页',
+    'page_2667013': 'AI工艺导师页',
+    'page_2667014': 'VR虚拟工坊页',
+    'page_2667015': '技能雷达图页',
+    'page_2667017': '工艺流派地图',
+    'page_2667161': '二手工具交易页',
+    'page_2667162': '作品定制商店',
+    'page_2667163': '大师原作拍卖',
+    'page_2667164': '公益义卖专场',
+    'page_2667165': '珠宝星座',
+    'page_2667166': ' 工艺计算器',
+    'page_2667167': '千年花丝时间轴',
+    'page_2667168': '宫廷花丝珍宝馆',
+    'page_2667169': '花丝流派地图',
+    'page_2667170': '焊接温度指南'
+                }
+                const allPageIds = ["home_page","craft_deconstruction","simulation_workshop","artwork_detail","community_co_creation","user_profile","global_search_index","page_2662785","page_2662863","page_2666341","page_2666458","page_2666459","page_2666516","page_2666557","page_2666558","page_2666559","page_2666733","page_2666734","page_2667013","page_2667014","page_2667015","page_2667017","page_2667161","page_2667162","page_2667163","page_2667164","page_2667165","page_2667166","page_2667167","page_2667168","page_2667169","page_2667170"]
+                const allFormatPageIdsMap = {"home_page":"home-page","craft_deconstruction":"craft-deconstruction","simulation_workshop":"simulation-workshop","artwork_detail":"artwork-detail","community_co_creation":"community-co-creation","user_profile":"user-profile","global_search_index":"global-search-index","page_2662785":"page-2662785","page_2662863":"page-2662863","page_2666341":"page-2666341","page_2666458":"page-2666458","page_2666459":"page-2666459","page_2666516":"page-2666516","page_2666557":"page-2666557","page_2666558":"page-2666558","page_2666559":"page-2666559","page_2666733":"page-2666733","page_2666734":"page-2666734","page_2667013":"page-2667013","page_2667014":"page-2667014","page_2667015":"page-2667015","page_2667017":"page-2667017","page_2667161":"page-2667161","page_2667162":"page-2667162","page_2667163":"page-2667163","page_2667164":"page-2667164","page_2667165":"page-2667165","page_2667166":"page-2667166","page_2667167":"page-2667167","page_2667168":"page-2667168","page_2667169":"page-2667169","page_2667170":"page-2667170"}
+                const IFRAME_MESSAGE_TYPE = {
+                  iframeNavigation: 'iframeNavigation',
+                }
+                const safeAddEventListener = function Tc(e,t,r,n=!1){e.removeEventListener(t,r,n),e.addEventListener(t,r,n)}
+                const processOnclick = (e,t,r)=>{if(r){const n=Rw(t);if(n.methodName&&Lp(n.methodName,r))return;e.preventDefault(),e.stopPropagation();const s=n.args||[],i=(s==null?void 0:s.find(u=>u))||"";i&&Mp(i)}}
+                const checkIframeMethod = (e,t)=>{try{return typeof t[e]=="function"||typeof t[e]=="function"}catch(r){return!1}}
+                const postIframeMessage = (targetPageId) => {
+                  window.parent.postMessage({
+                    type: IFRAME_MESSAGE_TYPE.iframeNavigation,
+                    targetPageId,
+                  })
+                }
+                const handleIframeLinkClick = (event) => {
+                  const dynamicIframe = document.querySelector('#dynamicIframe')
+                  if (!dynamicIframe?.contentWindow) {
+                    return
+                  }
+                  const link = event.target.closest('a')
+                  const target = event.target
+                  if (link) {
+                    const href = link.getAttribute('href')
+                    const onclick = link.getAttribute('onclick')
+                    if (href && href !== '#' && !href.startsWith('javascript:')) {
+                      event.preventDefault()
+                      event.stopPropagation()
+                      const targetPageId = getKeyByValueObj(allFormatPageIdsMap, href)
+                      if (targetPageId) {
+                        postIframeMessage(targetPageId)
+                      }
+                      return
+                    }
+                    if (onclick) {
+                      processOnclick(event, onclick, iframe.contentWindow, allFormatPageIdsMap)
+                    } else {
+                      event.preventDefault()
+                      event.stopPropagation()
+                    }
+                    return
+                  }
+                  const onclick = target.getAttribute('onclick')
+                  if (onclick) {
+                    processOnclick(event, onclick, iframe.contentWindow, allFormatPageIdsMap)
+                  }
+                }
+                function stringExt(link) {
+                  let s = String(link || '')
+                  s = (s.split('#')[0] || '')
+                  s = (s.split('?')[0] || '')
+                  s = s.trim()
+                  s = s.split('/').filter(Boolean).pop() || ''
+                  const lower = s.toLowerCase()
+                  if (lower.endsWith('.html') || lower.endsWith('.php') || lower.endsWith('.aspx')) {
+                    s = s.slice(0, s.lastIndexOf('.'))
+                  }
+                  return s
+                }
+                function formatHref(href) {
+                  if (!href) {
+                    return ''
+                  }
+                  try {
+                    const url = new URL(href, window.location.href)
+                    const pathname = url.pathname || ''
+                    return stringExt(pathname)
+                  } catch {
+                    return stringExt(href)
+                  }
+                }
+                function getKeyByValueObj(obj, value) {
+                  const newValue = formatHref(value)
+                  const keyFind = Object.keys(obj).find(k => k === newValue)
+                  if (keyFind) {
+                    return keyFind
+                  }
+                  return Object.keys(obj).find(k => obj[k] === newValue)
+                }
+                function setIframeSize(w, h) {
+                  const currentContainerRadio = w / h
+                  let widthValue = w
+                  let heightValue = h
+                  let zoom = 1
+                  if (currentContainerRadio > resolutionRatio) {
+                    widthValue = h * resolutionRatio
+                    heightValue = h
+                  } else {
+                    widthValue = w
+                    heightValue = w / resolutionRatio
+                  }
+                  zoom = width ? widthValue / width : 1
+                  return {
+                    width: widthValue / zoom + 'px',
+                    height: heightValue / zoom + 'px',
+                    zoom,
+                  }
+                }
+                function adjustIframeSize() {
+                  const iframeWrapper = document.querySelector(".iframe-wrapper")
+                  const { width, height, zoom } = setIframeSize(window.innerWidth, window.innerHeight)
+                  iframeWrapper.style.height = height
+                  iframeWrapper.style.width = width
+                  iframeWrapper.style.transform = 'scale(' + zoom + ')'
+                }
+                function sanitizeFilename(name) {
+                  return name.replace(/[\/:*?"<>|]/g, '_')
+                }
+                function handlePostMessage(event) {
+                  if (!event.data) {
+                    return
+                  }
+                  const { type, targetPageId } = event.data
+                  const targetPageName = pageNameMap[targetPageId]
+                  if (type === "iframeNavigation" && targetPageId && targetPageName) {
+                    window.location.href = targetPageName + '.html'
+                  }
+                }
+                function setupIframeEvents() {
+                  const iframe = document.getElementById('dynamicIframe')
+                  if (iframe && iframe.contentWindow && iframe.contentWindow.document) {
+                    safeAddEventListener(iframe.contentWindow.document, 'click', handleIframeLinkClick, true)
+                  } else {
+                    setTimeout(setupIframeEvents, 100)
+                  }
+                }
+                window.addEventListener('message', handlePostMessage)
+                window.onload = function() {
+                  adjustIframeSize()
+                  setupIframeEvents()
+                }
+                window.onresize = adjustIframeSize
+                window.onunload = () => {
+                  window.removeEventListener('message', handlePostMessage)
+                }
+              </script>
+                </head>
+                <body>
+                  <div class="iframe-outer">
+                    <div class="iframe-wrapper">
+                      <iframe id="dynamicIframe" srcdoc='<html data-source-file="src/layouts/BaseLayout.astro" data-source-line-start="11" data-source-line-end="21" lang="en"><head data-source-file="src/layouts/BaseLayout.astro" data-source-line-start="12" data-source-line-end="17"><script>(function(){
+      function stringExt(link) {
+        let s = String(link || &#39;&#39;)
+        s = (s.split(&#39;#&#39;)[0] || &#39;&#39;)
+        s = (s.split(&#39;?&#39;)[0] || &#39;&#39;)
+        s = s.trim()
+        s = s.split(&#39;/&#39;).filter(Boolean).pop() || &#39;&#39;
+        const lower = s.toLowerCase()
+        if (lower.endsWith(&#39;.html&#39;) || lower.endsWith(&#39;.php&#39;) || lower.endsWith(&#39;.aspx&#39;)) {
+          s = s.slice(0, s.lastIndexOf(&#39;.&#39;))
+        }
+        return s
+      }
+      function formatHref(href) {
+        if (!href) {
+          return &#39;&#39;
+        }
+        try {
+          const url = new URL(href, window.location.href)
+          const pathname = url.pathname || &#39;&#39;
+          return stringExt(pathname)
+        } catch {
+          return stringExt(href)
+        }
+      }
+      function getKeyByValueObj(obj, value) {
+        const newValue = formatHref(value)
+        const keyFind = Object.keys(obj).find(k => k === newValue)
+        if (keyFind) {
+          return keyFind
+        }
+        return Object.keys(obj).find(k => obj[k] === newValue)
+      }
+      function emit(to, source){
+        try {
+          if (window.parent) {
+            const allFormatPageIdsMap = {"home_page":"home-page","craft_deconstruction":"craft-deconstruction","simulation_workshop":"simulation-workshop","artwork_detail":"artwork-detail","community_co_creation":"community-co-creation","user_profile":"user-profile","global_search_index":"global-search-index","page_2662785":"page-2662785","page_2662863":"page-2662863","page_2666341":"page-2666341","page_2666458":"page-2666458","page_2666459":"page-2666459","page_2666516":"page-2666516","page_2666557":"page-2666557","page_2666558":"page-2666558","page_2666559":"page-2666559","page_2666733":"page-2666733","page_2666734":"page-2666734","page_2667013":"page-2667013","page_2667014":"page-2667014","page_2667015":"page-2667015","page_2667017":"page-2667017","page_2667161":"page-2667161","page_2667162":"page-2667162","page_2667163":"page-2667163","page_2667164":"page-2667164","page_2667165":"page-2667165","page_2667166":"page-2667166","page_2667167":"page-2667167","page_2667168":"page-2667168","page_2667169":"page-2667169","page_2667170":"page-2667170"}
+            const IFRAME_MESSAGE_TYPE = {
+              iframeNavigation: &#39;iframeNavigation&#39;,
+            }
+            const targetPageId = getKeyByValueObj(allFormatPageIdsMap, String(to || &#39;&#39;))
+            if (targetPageId) {
+              window.parent.postMessage({
+                type: IFRAME_MESSAGE_TYPE.iframeNavigation,
+                targetPageId,
+              }, &#39;*&#39;)
+            }
+          }
+        } catch(e) {}
+      }
+      try{
+        if (&#39;navigation&#39; in window &amp;&amp; window.navigation &amp;&amp; typeof window.navigation.addEventListener===&#39;function&#39;){
+          window.navigation.addEventListener(&#39;navigate&#39;, function(e){
+            try{
+              var url = (e.destination &amp;&amp; e.destination.url) || &#39;&#39;;
+              if (e.canIntercept &amp;&amp; typeof e.intercept===&#39;function&#39;){ e.intercept({ handler:function(){} }) }
+              else if (e.preventDefault){ e.preventDefault() }
+              emit(url)
+            }catch(_){}
+          })
+        }
+      }catch(_){}
+    })();</script><meta name="supported-color-schemes" content="light"><meta name="color-scheme" content="light"><style>
+      :root, html, body { color-scheme: light; }
+      html { forced-color-adjust: none; }
+    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Built with Astro">
+    <title data-source-file="src/layouts/BaseLayout.astro" data-source-line-start="16" data-source-line-end="16">全局搜索与工艺索引 - 丝韵镶华</title>
+  <link rel="stylesheet" href="./assets/html/106630/artwork-detail.DGaTwSpW.css">
+<style>input[data-v-d2bf4053]::-moz-placeholder{color:hsl(var(--muted-foreground))}input[data-v-d2bf4053]::placeholder{color:hsl(var(--muted-foreground))}
+</style><script src="./assets/static/uxbot/25_6/holder.js"></script></head>
+  <body data-source-file="src/layouts/BaseLayout.astro" data-source-line-start="18" data-source-line-end="20">
+    
+  <style>astro-island,astro-slot,astro-static-slot{display:contents}</style><script>(()=>{var e=async t=>{await(await t())()};(self.Astro||(self.Astro={})).load=e;window.dispatchEvent(new Event("astro:load"));})();</script><script>(()=>{var A=Object.defineProperty;var g=(i,o,a)=>o in i?A(i,o,{enumerable:!0,configurable:!0,writable:!0,value:a}):i[o]=a;var d=(i,o,a)=>g(i,typeof o!="symbol"?o+"":o,a);{let i={0:t=>m(t),1:t=>a(t),2:t=>new RegExp(t),3:t=>new Date(t),4:t=>new Map(a(t)),5:t=>new Set(a(t)),6:t=>BigInt(t),7:t=>new URL(t),8:t=>new Uint8Array(t),9:t=>new Uint16Array(t),10:t=>new Uint32Array(t),11:t=>1/0*t},o=t=>{let[l,e]=t;return l in i?i[l](e):void 0},a=t=>t.map(o),m=t=>typeof t!="object"||t===null?t:Object.fromEntries(Object.entries(t).map(([l,e])=>[l,o(e)]));class y extends HTMLElement{constructor(){super(...arguments);d(this,"Component");d(this,"hydrator");d(this,"hydrate",async()=>{var b;if(!this.hydrator||!this.isConnected)return;let e=(b=this.parentElement)==null?void 0:b.closest("astro-island[ssr]");if(e){e.addEventListener("astro:hydrate",this.hydrate,{once:!0});return}let c=this.querySelectorAll("astro-slot"),n={},h=this.querySelectorAll("template[data-astro-template]");for(let r of h){let s=r.closest(this.tagName);s!=null&amp;&amp;s.isSameNode(this)&amp;&amp;(n[r.getAttribute("data-astro-template")||"default"]=r.innerHTML,r.remove())}for(let r of c){let s=r.closest(this.tagName);s!=null&amp;&amp;s.isSameNode(this)&amp;&amp;(n[r.getAttribute("name")||"default"]=r.innerHTML)}let p;try{p=this.hasAttribute("props")?m(JSON.parse(this.getAttribute("props"))):{}}catch(r){let s=this.getAttribute("component-url")||"<unknown>",v=this.getAttribute("component-export");throw v&amp;&amp;(s+=` (export ${v})`),console.error(`[hydrate] Error parsing props for component ${s}`,this.getAttribute("props"),r),r}let u;await this.hydrator(this)(this.Component,p,n,{client:this.getAttribute("client")}),this.removeAttribute("ssr"),this.dispatchEvent(new CustomEvent("astro:hydrate"))});d(this,"unmount",()=>{this.isConnected||this.dispatchEvent(new CustomEvent("astro:unmount"))})}disconnectedCallback(){document.removeEventListener("astro:after-swap",this.unmount),document.addEventListener("astro:after-swap",this.unmount,{once:!0})}connectedCallback(){if(!this.hasAttribute("await-children")||document.readyState==="interactive"||document.readyState==="complete")this.childrenConnectedCallback();else{let e=()=>{document.removeEventListener("DOMContentLoaded",e),c.disconnect(),this.childrenConnectedCallback()},c=new MutationObserver(()=>{var n;((n=this.lastChild)==null?void 0:n.nodeType)===Node.COMMENT_NODE&amp;&amp;this.lastChild.nodeValue==="astro:end"&amp;&amp;(this.lastChild.remove(),e())});c.observe(this,{childList:!0}),document.addEventListener("DOMContentLoaded",e)}}async childrenConnectedCallback(){let e=this.getAttribute("before-hydration-url");e&amp;&amp;await import(e),this.start()}async start(){let e=JSON.parse(this.getAttribute("opts")),c=this.getAttribute("client");if(Astro[c]===void 0){window.addEventListener(`astro:${c}`,()=>this.start(),{once:!0});return}try{await Astro[c](async()=>{let n=this.getAttribute("renderer-url"),[h,{default:p}]=await Promise.all([import(this.getAttribute("component-url")),n?import(n):()=>()=>{}]),u=this.getAttribute("component-export")||"default";if(!u.includes("."))this.Component=h[u];else{this.Component=h;for(let f of u.split("."))this.Component=this.Component[f]}return this.hydrator=p,this.hydrate},e,this)}catch(n){console.error(`[astro-island] Error hydrating ${this.getAttribute("component-url")}`,n)}}attributeChangedCallback(){this.hydrate()}}d(y,"observedAttributes",["props"]),customElements.get("astro-island")||customElements.define("astro-island",y)}})();</script><astro-island uid="1mFw9e" prefix="s0" component-url="https://uxbot-prod-public.s3.cn-north-1.amazonaws.com.cn/html/106630/CommonHeader.VqzVkjDw.js" component-export="default" renderer-url="https://uxbot-prod-public.s3.cn-north-1.amazonaws.com.cn/html/106630/client.DlEmDV8W.js" props="{&amp;quot;variant&amp;quot;:[0,&amp;quot;transparent&amp;quot;]}" ssr="" client="load" opts="{&amp;quot;name&amp;quot;:&amp;quot;CommonHeader&amp;quot;,&amp;quot;value&amp;quot;:true}" await-children=""><header class="fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-transparent" data-source-file="src/components/common/CommonHeader.vue" data-source-line-start="28" data-source-line-end="75"><div class="container mx-auto px-6 h-16 flex items-center justify-between" data-source-file="src/components/common/CommonHeader.vue" data-source-line-start="36" data-source-line-end="74"><a href="./home-page.html" class="flex items-center gap-3 group" data-source-file="src/components/common/CommonHeader.vue" data-source-line-start="38" data-source-line-end="45"><div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-md group-hover:shadow-lg group-hover:glow-gold transition-all duration-300" data-source-file="src/components/common/CommonHeader.vue" data-source-line-start="39" data-source-line-end="41"><span class="text-primary-foreground font-bold text-lg" data-source-file="src/components/common/CommonHeader.vue" data-source-line-start="40" data-source-line-end="40">丝</span></div><span class="text-xl font-bold text-gradient-gold hidden sm:block" data-source-file="src/components/common/CommonHeader.vue" data-source-line-start="42" data-source-line-end="44"> 丝韵镶华 </span></a><div class="flex items-center gap-2" data-source-file="src/components/common/CommonHeader.vue" data-source-line-start="48" data-source-line-end="73"><a class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;amp;_svg]:pointer-events-none [&amp;amp;_svg]:size-4 [&amp;amp;_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground h-10 w-10" href="./global-search-index.html" aria-label="搜索" data-source-file="src/components/ui/button/Button.vue" data-source-line-start="21" data-source-line-end="27"><!--[--><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-source-file="src/components/common/SafeIcon.vue" data-source-line-start="43" data-source-line-end="49" class="lucide lucide-search-icon lucide-search"><path d="m21 21-4.34-4.34"></path><circle cx="11" cy="11" r="8"></circle></svg><!--]--></a><a class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;amp;_svg]:pointer-events-none [&amp;amp;_svg]:size-4 [&amp;amp;_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground h-10 w-10 rounded-full" href="./user-profile.html" aria-label="个人中心" data-source-file="src/components/ui/button/Button.vue" data-source-line-start="21" data-source-line-end="27"><!--[--><div class="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center" data-source-file="src/components/common/CommonHeader.vue" data-source-line-start="69" data-source-line-end="71"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide text-primary-foreground lucide-user-icon lucide-user text-primary-foreground" data-source-file="src/components/common/SafeIcon.vue" data-source-line-start="43" data-source-line-end="49"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></div><!--]--></a></div></div></header><!--astro:end--></astro-island>
+  
+  <main data-source-file="src/pages/global-search-index.astro" data-source-line-start="16" data-source-line-end="31" class="min-h-screen bg-background pt-20 pb-24">
+    <div data-source-file="src/pages/global-search-index.astro" data-source-line-start="17" data-source-line-end="30" class="container mx-auto px-4 py-8">
+      <!-- Search Header -->
+      <astro-island uid="S5KCK" prefix="s1" component-url="https://uxbot-prod-public.s3.cn-north-1.amazonaws.com.cn/html/106630/SearchHeader.D-JVsea1.js" component-export="default" renderer-url="https://uxbot-prod-public.s3.cn-north-1.amazonaws.com.cn/html/106630/client.DlEmDV8W.js" props="{}" ssr="" client="load" opts="{&amp;quot;name&amp;quot;:&amp;quot;SearchHeader&amp;quot;,&amp;quot;value&amp;quot;:true}" await-children=""><div class="space-y-6" data-source-file="src/components/global-search-index/SearchHeader.vue" data-source-line-start="43" data-source-line-end="103" data-v-d2bf4053=""><div class="text-center space-y-2" data-source-file="src/components/global-search-index/SearchHeader.vue" data-source-line-start="45" data-source-line-end="52" data-v-d2bf4053=""><h1 class="text-4xl md:text-5xl font-bold text-gradient-gold" data-source-file="src/components/global-search-index/SearchHeader.vue" data-source-line-start="46" data-source-line-end="48" data-v-d2bf4053=""> 工艺索引 </h1><p class="text-muted-foreground text-lg" data-source-file="src/components/global-search-index/SearchHeader.vue" data-source-line-start="49" data-source-line-end="51" data-v-d2bf4053=""> 探索花丝镶嵌的知识宝库 </p></div><div class="relative max-w-2xl mx-auto" data-source-file="src/components/global-search-index/SearchHeader.vue" data-source-line-start="55" data-source-line-end="102" data-v-d2bf4053=""><div class="relative flex items-center gap-3 px-6 py-4 rounded-xl bg-card border-2 transition-all duration-300 border-primary shadow-lg glow-gold" data-source-file="src/components/global-search-index/SearchHeader.vue" data-source-line-start="56" data-source-line-end="96" data-v-d2bf4053=""><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide text-primary flex-shrink-0 lucide-search-icon lucide-search text-primary flex-shrink-0" data-source-file="src/components/common/SafeIcon.vue" data-source-line-start="43" data-source-line-end="49" data-v-d2bf4053=""><path d="m21 21-4.34-4.34"></path><circle cx="11" cy="11" r="8"></circle></svg><input value="" type="text" placeholder="搜索纹样、工艺、传承人..." class="flex-1 bg-transparent outline-none text-foreground placeholder:text-muted-foreground text-lg" data-source-file="src/components/global-search-index/SearchHeader.vue" data-source-line-start="67" data-source-line-end="75" data-v-d2bf4053=""><!----><button disabled="" class="text-primary hover:text-primary/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0" aria-label="搜索" data-source-file="src/components/global-search-index/SearchHeader.vue" data-source-line-start="88" data-source-line-end="95" data-v-d2bf4053=""><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-source-file="src/components/common/SafeIcon.vue" data-source-line-start="43" data-source-line-end="49" data-v-d2bf4053="" class="lucide lucide-arrow-right-icon lucide-arrow-right"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg></button></div><p class="text-center text-xs text-muted-foreground mt-3" data-source-file="src/components/global-search-index/SearchHeader.vue" data-source-line-start="99" data-source-line-end="101" data-v-d2bf4053=""> 提示：输入纹样名称、工艺步骤或传承人名字 </p></div></div><!--astro:end--></astro-island>
+      
+      <!-- Category Grid &amp; Hot Search (shown when no search results) -->
+<div data-source-file="src/pages/global-search-index.astro" data-source-line-start="22" data-source-line-end="26" id="search-index-content" class="space-y-12">
+        <script>(()=>{var l=(n,t)=>{let i=async()=>{await(await n())()},e=typeof t.value=="object"?t.value:void 0,s={timeout:e==null?void 0:e.timeout};"requestIdleCallback"in window?window.requestIdleCallback(i,s):setTimeout(i,s.timeout||200)};(self.Astro||(self.Astro={})).idle=l;window.dispatchEvent(new Event("astro:idle"));})();</script><astro-island uid="22Tlzq" prefix="s2" component-url="https://uxbot-prod-public.s3.cn-north-1.amazonaws.com.cn/html/106630/SearchCategoryGrid.BnkD5_-w.js" component-export="default" renderer-url="https://uxbot-prod-public.s3.cn-north-1.amazonaws.com.cn/html/106630/client.DlEmDV8W.js" props="{}" ssr="" client="idle" opts="{&amp;quot;name&amp;quot;:&amp;quot;SearchCategoryGrid&amp;quot;,&amp;quot;value&amp;quot;:true}" await-children=""><div class="space-y-6" data-source-file="src/components/global-search-index/SearchCategoryGrid.vue" data-source-line-start="29" data-source-line-end="90"><div class="text-center" data-source-file="src/components/global-search-index/SearchCategoryGrid.vue" data-source-line-start="31" data-source-line-end="38"><h2 class="text-3xl font-bold text-foreground mb-2" data-source-file="src/components/global-search-index/SearchCategoryGrid.vue" data-source-line-start="32" data-source-line-end="34"> 分类索引 </h2><p class="text-muted-foreground" data-source-file="src/components/global-search-index/SearchCategoryGrid.vue" data-source-line-start="35" data-source-line-end="37"> 按维度浏览非遗知识 </p></div><div class="grid grid-cols-1 md:grid-cols-3 gap-6" data-source-file="src/components/global-search-index/SearchCategoryGrid.vue" data-source-line-start="41" data-source-line-end="89"><!--[--><div class="group relative overflow-hidden rounded-2xl cursor-pointer transition-all duration-300 card-hover scale-105" data-source-file="src/components/global-search-index/SearchCategoryGrid.vue" data-source-line-start="42" data-source-line-end="88"><div class="absolute inset-0 overflow-hidden" data-source-file="src/components/global-search-index/SearchCategoryGrid.vue" data-source-line-start="55" data-source-line-end="63"><img src="https://spark-builder.s3.cn-north-1.amazonaws.com.cn/image/2026/3/14/4e6f59de-4f68-48a5-adf5-d242eb445125.png" alt="纹样百科" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-source-file="src/components/global-search-index/SearchCategoryGrid.vue" data-source-line-start="56" data-source-line-end="60"><div class="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" data-source-file="src/components/global-search-index/SearchCategoryGrid.vue" data-source-line-start="62" data-source-line-end="62"></div></div><div class="relative h-64 flex flex-col justify-between p-6" data-source-file="src/components/global-search-index/SearchCategoryGrid.vue" data-source-line-start="66" data-source-line-end="81"><div class="w-12 h-12 rounded-full bg-primary/20 border border-primary flex items-center justify-center self-start" data-source-file="src/components/global-search-index/SearchCategoryGrid.vue" data-source-line-start="68" data-source-line-end="70"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide text-primary lucide-feather-icon lucide-feather text-primary" data-source-file="src/components/common/SafeIcon.vue" data-source-line-start="43" data-source-line-end="49"><path d="M12.67 19a2 2 0 0 0 1.416-.588l6.154-6.172a6 6 0 0 0-8.49-8.49L5.586 9.914A2 2 0 0 0 5 11.328V18a1 1 0 0 0 1 1z"></path><path d="M16 8 2 22"></path><path d="M17.5 15H9"></path></svg></div><div class="space-y-2" data-source-file="src/components/global-search-index/SearchCategoryGrid.vue" data-source-line-start="73" data-source-line-end="80"><h3 class="text-2xl font-bold text-foreground" data-source-file="src/components/global-search-index/SearchCategoryGrid.vue" data-source-line-start="74" data-source-line-end="76">纹样百科</h3><p class="text-primary font-semibold" data-source-file="src/components/global-search-index/SearchCategoryGrid.vue" data-source-line-start="77" data-source-line-end="79">128 项内容 </p></div></div><div class="absolute inset-0 rounded-2xl border-2 border-primary transition-opacity duration-300 opacity-100" data-source-file="src/components/global-search-index/SearchCategoryGrid.vue" data-source-line-start="84" data-source-line-end="87"></div></div><div class="group relative overflow-hidden rounded-2xl cursor-pointer transition-all duration-300 card-hover scale-105" data-source-file="src/components/global-search-index/SearchCategoryGrid.vue" data-source-line-start="42" data-source-line-end="88"><div class="absolute inset-0 overflow-hidden" data-source-file="src/components/global-search-index/SearchCategoryGrid.vue" data-source-line-start="55" data-source-line-end="63"><img src="https://spark-builder.s3.cn-north-1.amazonaws.com.cn/image/2026/3/14/48ed016e-8dd4-4a31-a76a-68d7a6aa12f3.png" alt="工艺指南" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-source-file="src/components/global-search-index/SearchCategoryGrid.vue" data-source-line-start="56" data-source-line-end="60"><div class="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" data-source-file="src/components/global-search-index/SearchCategoryGrid.vue" data-source-line-start="62" data-source-line-end="62"></div></div><div class="relative h-64 flex flex-col justify-between p-6" data-source-file="src/components/global-search-index/SearchCategoryGrid.vue" data-source-line-start="66" data-source-line-end="81"><div class="w-12 h-12 rounded-full bg-primary/20 border border-primary flex items-center justify-center self-start" data-source-file="src/components/global-search-index/SearchCategoryGrid.vue" data-source-line-start="68" data-source-line-end="70"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide text-primary lucide-book-open-icon lucide-book-open text-primary" data-source-file="src/components/common/SafeIcon.vue" data-source-line-start="43" data-source-line-end="49"><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path></svg></div><div class="space-y-2" data-source-file="src/components/global-search-index/SearchCategoryGrid.vue" data-source-line-start="73" data-source-line-end="80"><h3 class="text-2xl font-bold text-foreground" data-source-file="src/components/global-search-index/SearchCategoryGrid.vue" data-source-line-start="74" data-source-line-end="76">工艺指南</h3><p class="text-primary font-semibold" data-source-file="src/components/global-search-index/SearchCategoryGrid.vue" data-source-line-start="77" data-source-line-end="79">24 项内容 </p></div></div><div class="absolute inset-0 rounded-2xl border-2 border-primary transition-opacity duration-300 opacity-100" data-source-file="src/components/global-search-index/SearchCategoryGrid.vue" data-source-line-start="84" data-source-line-end="87"></div></div><div class="group relative overflow-hidden rounded-2xl cursor-pointer transition-all duration-300 card-hover scale-105" data-source-file="src/components/global-search-index/SearchCategoryGrid.vue" data-source-line-start="42" data-source-line-end="88"><div class="absolute inset-0 overflow-hidden" data-source-file="src/components/global-search-index/SearchCategoryGrid.vue" data-source-line-start="55" data-source-line-end="63"><img src="https://spark-builder.s3.cn-north-1.amazonaws.com.cn/image/2026/3/14/f234c6fd-26cb-447f-8ffc-0ffb7fa93956.png" alt="大师名录" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" data-source-file="src/components/global-search-index/SearchCategoryGrid.vue" data-source-line-start="56" data-source-line-end="60"><div class="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" data-source-file="src/components/global-search-index/SearchCategoryGrid.vue" data-source-line-start="62" data-source-line-end="62"></div></div><div class="relative h-64 flex flex-col justify-between p-6" data-source-file="src/components/global-search-index/SearchCategoryGrid.vue" data-source-line-start="66" data-source-line-end="81"><div class="w-12 h-12 rounded-full bg-primary/20 border border-primary flex items-center justify-center self-start" data-source-file="src/components/global-search-index/SearchCategoryGrid.vue" data-source-line-start="68" data-source-line-end="70"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide text-primary lucide-award-icon lucide-award text-primary" data-source-file="src/components/common/SafeIcon.vue" data-source-line-start="43" data-source-line-end="49"><path d="m15.477 12.89 1.515 8.526a.5.5 0 0 1-.81.47l-3.58-2.687a1 1 0 0 0-1.197 0l-3.586 2.686a.5.5 0 0 1-.81-.469l1.514-8.526"></path><circle cx="12" cy="8" r="6"></circle></svg></div><div class="space-y-2" data-source-file="src/components/global-search-index/SearchCategoryGrid.vue" data-source-line-start="73" data-source-line-end="80"><h3 class="text-2xl font-bold text-foreground" data-source-file="src/components/global-search-index/SearchCategoryGrid.vue" data-source-line-start="74" data-source-line-end="76">大师名录</h3><p class="text-primary font-semibold" data-source-file="src/components/global-search-index/SearchCategoryGrid.vue" data-source-line-start="77" data-source-line-end="79">15 项内容 </p></div></div><div class="absolute inset-0 rounded-2xl border-2 border-primary transition-opacity duration-300 opacity-100" data-source-file="src/components/global-search-index/SearchCategoryGrid.vue" data-source-line-start="84" data-source-line-end="87"></div></div><!--]--></div></div><!--astro:end--></astro-island>
+        <astro-island uid="Q8DEJ" prefix="s3" component-url="https://uxbot-prod-public.s3.cn-north-1.amazonaws.com.cn/html/106630/FeatureShortcuts.WILbHu1J.js" component-export="default" renderer-url="https://uxbot-prod-public.s3.cn-north-1.amazonaws.com.cn/html/106630/client.DlEmDV8W.js" props="{}" ssr="" client="idle" opts="{&amp;quot;name&amp;quot;:&amp;quot;FeatureShortcuts&amp;quot;,&amp;quot;value&amp;quot;:true}" await-children=""><div class="space-y-6" data-source-file="src/components/global_search_index/FeatureShortcuts.vue" data-source-line-start="7" data-source-line-end="55"><div class="text-center" data-source-file="src/components/global_search_index/FeatureShortcuts.vue" data-source-line-start="9" data-source-line-end="16"><h2 class="text-2xl font-bold text-foreground mb-1" data-source-file="src/components/global_search_index/FeatureShortcuts.vue" data-source-line-start="10" data-source-line-end="12"> 特色探索 </h2><p class="text-sm text-muted-foreground" data-source-file="src/components/global_search_index/FeatureShortcuts.vue" data-source-line-start="13" data-source-line-end="15"> 多维度感知非遗魅力 </p></div><div class="grid grid-cols-2 gap-4" data-source-file="src/components/global_search_index/FeatureShortcuts.vue" data-source-line-start="19" data-source-line-end="51"><a href="./page-2667017.html" class="flex flex-col items-center justify-center p-6 bg-card border border-primary/20 rounded-2xl transition-all duration-300 card-hover group" data-source-file="src/components/global_search_index/FeatureShortcuts.vue" data-source-line-start="21" data-source-line-end="34"><div class="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mb-4 group-hover:glow-gold transition-all duration-300" data-source-file="src/components/global_search_index/FeatureShortcuts.vue" data-source-line-start="25" data-source-line-end="27"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide text-primary lucide-map-icon lucide-map text-primary" data-source-file="src/components/common/SafeIcon.vue" data-source-line-start="43" data-source-line-end="49"><path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z"></path><path d="M15 5.764v15"></path><path d="M9 3.236v15"></path></svg></div><span class="font-bold text-foreground text-lg mb-1 group-hover:text-primary transition-colors" data-source-file="src/components/global_search_index/FeatureShortcuts.vue" data-source-line-start="28" data-source-line-end="30"> 工艺流派地图 </span><span class="text-[10px] text-muted-foreground uppercase tracking-widest" data-source-file="src/components/global_search_index/FeatureShortcuts.vue" data-source-line-start="31" data-source-line-end="33"> Craft Lineage </span></a><a href="./page-2667015.html" class="flex flex-col items-center justify-center p-6 bg-card border border-primary/20 rounded-2xl transition-all duration-300 card-hover group" data-source-file="src/components/global_search_index/FeatureShortcuts.vue" data-source-line-start="37" data-source-line-end="50"><div class="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mb-4 group-hover:glow-gold transition-all duration-300" data-source-file="src/components/global_search_index/FeatureShortcuts.vue" data-source-line-start="41" data-source-line-end="43"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide text-primary lucide-radar-icon lucide-radar text-primary" data-source-file="src/components/common/SafeIcon.vue" data-source-line-start="43" data-source-line-end="49"><path d="M19.07 4.93A10 10 0 0 0 6.99 3.34"></path><path d="M4 6h.01"></path><path d="M2.29 9.62A10 10 0 1 0 21.31 8.35"></path><path d="M16.24 7.76A6 6 0 1 0 8.23 16.67"></path><path d="M12 18h.01"></path><path d="M17.99 11.66A6 6 0 0 1 15.77 16.67"></path><circle cx="12" cy="12" r="2"></circle><path d="m13.41 10.59 5.66-5.66"></path></svg></div><span class="font-bold text-foreground text-lg mb-1 group-hover:text-primary transition-colors" data-source-file="src/components/global_search_index/FeatureShortcuts.vue" data-source-line-start="44" data-source-line-end="46"> 技能雷达图 </span><span class="text-[10px] text-muted-foreground uppercase tracking-widest" data-source-file="src/components/global_search_index/FeatureShortcuts.vue" data-source-line-start="47" data-source-line-end="49"> Skill Radar </span></a></div><div class="divider-gold opacity-30 mt-8" data-source-file="src/components/global_search_index/FeatureShortcuts.vue" data-source-line-start="54" data-source-line-end="54"></div></div><!--astro:end--></astro-island>
+        <astro-island uid="Z1rMegO" prefix="s4" component-url="https://uxbot-prod-public.s3.cn-north-1.amazonaws.com.cn/html/106630/HotSearchTerms.DR72y7em.js" component-export="default" renderer-url="https://uxbot-prod-public.s3.cn-north-1.amazonaws.com.cn/html/106630/client.DlEmDV8W.js" props="{}" ssr="" client="idle" opts="{&amp;quot;name&amp;quot;:&amp;quot;HotSearchTerms&amp;quot;,&amp;quot;value&amp;quot;:true}" await-children=""><div class="space-y-6" data-source-file="src/components/global-search-index/HotSearchTerms.vue" data-source-line-start="26" data-source-line-end="66"><div class="text-center" data-source-file="src/components/global-search-index/HotSearchTerms.vue" data-source-line-start="28" data-source-line-end="35"><h2 class="text-3xl font-bold text-foreground mb-2" data-source-file="src/components/global-search-index/HotSearchTerms.vue" data-source-line-start="29" data-source-line-end="31"> 热门工艺榜单 </h2><p class="text-muted-foreground" data-source-file="src/components/global-search-index/HotSearchTerms.vue" data-source-line-start="32" data-source-line-end="34"> 探索备受关注的非遗技艺 </p></div><div class="flex flex-wrap justify-center gap-3" data-source-file="src/components/global-search-index/HotSearchTerms.vue" data-source-line-start="38" data-source-line-end="62"><!--[--><button class="group relative px-6 py-3 rounded-full bg-card border border-border/50 text-foreground hover:border-primary hover:bg-primary/5 transition-all duration-300 flex items-center gap-2 hover:shadow-lg hover:glow-gold" data-source-file="src/components/global-search-index/HotSearchTerms.vue" data-source-line-start="39" data-source-line-end="61"><span class="text-primary font-bold text-sm" data-source-file="src/components/global-search-index/HotSearchTerms.vue" data-source-line-start="46" data-source-line-end="48"> #1</span><span class="font-medium" data-source-file="src/components/global-search-index/HotSearchTerms.vue" data-source-line-start="51" data-source-line-end="53">金翼善冠制作</span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide text-primary opacity-0 group-hover:opacity-100 transition-opacity duration-300 lucide-arrow-right-icon lucide-arrow-right text-primary opacity-0 group-hover:opacity-100 transition-opacity duration-300" data-source-file="src/components/common/SafeIcon.vue" data-source-line-start="43" data-source-line-end="49"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg></button><button class="group relative px-6 py-3 rounded-full bg-card border border-border/50 text-foreground hover:border-primary hover:bg-primary/5 transition-all duration-300 flex items-center gap-2 hover:shadow-lg hover:glow-gold" data-source-file="src/components/global-search-index/HotSearchTerms.vue" data-source-line-start="39" data-source-line-end="61"><span class="text-primary font-bold text-sm" data-source-file="src/components/global-search-index/HotSearchTerms.vue" data-source-line-start="46" data-source-line-end="48"> #2</span><span class="font-medium" data-source-file="src/components/global-search-index/HotSearchTerms.vue" data-source-line-start="51" data-source-line-end="53">如何有效焊接</span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide text-primary opacity-0 group-hover:opacity-100 transition-opacity duration-300 lucide-arrow-right-icon lucide-arrow-right text-primary opacity-0 group-hover:opacity-100 transition-opacity duration-300" data-source-file="src/components/common/SafeIcon.vue" data-source-line-start="43" data-source-line-end="49"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg></button><button class="group relative px-6 py-3 rounded-full bg-card border border-border/50 text-foreground hover:border-primary hover:bg-primary/5 transition-all duration-300 flex items-center gap-2 hover:shadow-lg hover:glow-gold" data-source-file="src/components/global-search-index/HotSearchTerms.vue" data-source-line-start="39" data-source-line-end="61"><span class="text-primary font-bold text-sm" data-source-file="src/components/global-search-index/HotSearchTerms.vue" data-source-line-start="46" data-source-line-end="48"> #3</span><span class="font-medium" data-source-file="src/components/global-search-index/HotSearchTerms.vue" data-source-line-start="51" data-source-line-end="53">卷草纹构图</span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide text-primary opacity-0 group-hover:opacity-100 transition-opacity duration-300 lucide-arrow-right-icon lucide-arrow-right text-primary opacity-0 group-hover:opacity-100 transition-opacity duration-300" data-source-file="src/components/common/SafeIcon.vue" data-source-line-start="43" data-source-line-end="49"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg></button><button class="group relative px-6 py-3 rounded-full bg-card border border-border/50 text-foreground hover:border-primary hover:bg-primary/5 transition-all duration-300 flex items-center gap-2 hover:shadow-lg hover:glow-gold" data-source-file="src/components/global-search-index/HotSearchTerms.vue" data-source-line-start="39" data-source-line-end="61"><span class="text-primary font-bold text-sm" data-source-file="src/components/global-search-index/HotSearchTerms.vue" data-source-line-start="46" data-source-line-end="48"> #4</span><span class="font-medium" data-source-file="src/components/global-search-index/HotSearchTerms.vue" data-source-line-start="51" data-source-line-end="53">点翠复刻技巧</span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide text-primary opacity-0 group-hover:opacity-100 transition-opacity duration-300 lucide-arrow-right-icon lucide-arrow-right text-primary opacity-0 group-hover:opacity-100 transition-opacity duration-300" data-source-file="src/components/common/SafeIcon.vue" data-source-line-start="43" data-source-line-end="49"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg></button><button class="group relative px-6 py-3 rounded-full bg-card border border-border/50 text-foreground hover:border-primary hover:bg-primary/5 transition-all duration-300 flex items-center gap-2 hover:shadow-lg hover:glow-gold" data-source-file="src/components/global-search-index/HotSearchTerms.vue" data-source-line-start="39" data-source-line-end="61"><span class="text-primary font-bold text-sm" data-source-file="src/components/global-search-index/HotSearchTerms.vue" data-source-line-start="46" data-source-line-end="48"> #5</span><span class="font-medium" data-source-file="src/components/global-search-index/HotSearchTerms.vue" data-source-line-start="51" data-source-line-end="53">当代花丝艺术展</span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide text-primary opacity-0 group-hover:opacity-100 transition-opacity duration-300 lucide-arrow-right-icon lucide-arrow-right text-primary opacity-0 group-hover:opacity-100 transition-opacity duration-300" data-source-file="src/components/common/SafeIcon.vue" data-source-line-start="43" data-source-line-end="49"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg></button><!--]--></div><div class="divider-gold my-8" data-source-file="src/components/global-search-index/HotSearchTerms.vue" data-source-line-start="65" data-source-line-end="65"></div></div><!--astro:end--></astro-island>
+      </div>
+      
+      <!-- Search Results (shown when searching) -->
+      <astro-island uid="Z2kr8vW" prefix="s5" component-url="https://uxbot-prod-public.s3.cn-north-1.amazonaws.com.cn/html/106630/SearchResults.QD_bRlEt.js" component-export="default" renderer-url="https://uxbot-prod-public.s3.cn-north-1.amazonaws.com.cn/html/106630/client.DlEmDV8W.js" props="{}" ssr="" client="load" opts="{&amp;quot;name&amp;quot;:&amp;quot;SearchResults&amp;quot;,&amp;quot;value&amp;quot;:true}" await-children=""><!--[--><div class="space-y-8" data-source-file="src/components/global-search-index/SearchResults.vue" data-source-line-start="155" data-source-line-end="242"><!----><!----></div><script data-source-file="src/components/global-search-index/SearchResults.vue" data-source-line-start="245" data-source-line-end="254">
+    if (typeof window !== &amp;#39;undefined&amp;#39;) {
+      window.addEventListener(&amp;#39;search-query&amp;#39;, () =&amp;gt; {
+        const indexContent = document.getElementById(&amp;#39;search-index-content&amp;#39;)
+        if (indexContent) {
+          indexContent.style.display = &amp;#39;none&amp;#39;
+        }
+      })
+    }
+  </script><!--]--><!--astro:end--></astro-island>
+    </div>
+  </main>
+  
+  <astro-island uid="ylshL" prefix="s6" component-url="https://uxbot-prod-public.s3.cn-north-1.amazonaws.com.cn/html/106630/BottomNavigation.BTfRctJg.js" component-export="default" renderer-url="https://uxbot-prod-public.s3.cn-north-1.amazonaws.com.cn/html/106630/client.DlEmDV8W.js" props="{}" ssr="" client="load" opts="{&amp;quot;name&amp;quot;:&amp;quot;BottomNavigation&amp;quot;,&amp;quot;value&amp;quot;:true}" await-children=""><nav class="fixed bottom-0 left-0 right-0 z-40 bg-card/95 backdrop-blur-md border-t border-border safe-area-inset-bottom" data-source-file="src/components/common/BottomNavigation.vue" data-source-line-start="38" data-source-line-end="72"><div class="container mx-auto px-4" data-source-file="src/components/common/BottomNavigation.vue" data-source-line-start="39" data-source-line-end="71"><div class="flex items-center justify-around h-16" data-source-file="src/components/common/BottomNavigation.vue" data-source-line-start="40" data-source-line-end="70"><!--[--><a href="./home-page.html" class="flex flex-col items-center justify-center gap-1 py-2 px-4 rounded-lg transition-all duration-300 min-w-[64px] text-primary" data-source-file="src/components/common/BottomNavigation.vue" data-source-line-start="41" data-source-line-end="69"><div class="relative transition-transform duration-300 scale-110" data-source-file="src/components/common/BottomNavigation.vue" data-source-line-start="53" data-source-line-end="62"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-source-file="src/components/common/SafeIcon.vue" data-source-line-start="43" data-source-line-end="49" class="lucide lucide-house-icon lucide-house"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"></path><path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg><div class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary animate-pulse" data-source-file="src/components/common/BottomNavigation.vue" data-source-line-start="58" data-source-line-end="61"></div></div><span class="text-xs font-medium transition-all duration-300 font-semibold" data-source-file="src/components/common/BottomNavigation.vue" data-source-line-start="63" data-source-line-end="68">首页</span></a><a href="./craft-deconstruction.html" class="flex flex-col items-center justify-center gap-1 py-2 px-4 rounded-lg transition-all duration-300 min-w-[64px] text-muted-foreground hover:text-foreground" data-source-file="src/components/common/BottomNavigation.vue" data-source-line-start="41" data-source-line-end="69"><div class="relative transition-transform duration-300" data-source-file="src/components/common/BottomNavigation.vue" data-source-line-start="53" data-source-line-end="62"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-source-file="src/components/common/SafeIcon.vue" data-source-line-start="43" data-source-line-end="49" class="lucide lucide-compass-icon lucide-compass"><path d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z"></path><circle cx="12" cy="12" r="10"></circle></svg><!----></div><span class="text-xs font-medium transition-all duration-300" data-source-file="src/components/common/BottomNavigation.vue" data-source-line-start="63" data-source-line-end="68">探索</span></a><a href="./community-co-creation.html" class="flex flex-col items-center justify-center gap-1 py-2 px-4 rounded-lg transition-all duration-300 min-w-[64px] text-muted-foreground hover:text-foreground" data-source-file="src/components/common/BottomNavigation.vue" data-source-line-start="41" data-source-line-end="69"><div class="relative transition-transform duration-300" data-source-file="src/components/common/BottomNavigation.vue" data-source-line-start="53" data-source-line-end="62"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-source-file="src/components/common/SafeIcon.vue" data-source-line-start="43" data-source-line-end="49" class="lucide lucide-users-icon lucide-users"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><path d="M16 3.128a4 4 0 0 1 0 7.744"></path><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><circle cx="9" cy="7" r="4"></circle></svg><!----></div><span class="text-xs font-medium transition-all duration-300" data-source-file="src/components/common/BottomNavigation.vue" data-source-line-start="63" data-source-line-end="68">社区</span></a><a href="./user-profile.html" class="flex flex-col items-center justify-center gap-1 py-2 px-4 rounded-lg transition-all duration-300 min-w-[64px] text-muted-foreground hover:text-foreground" data-source-file="src/components/common/BottomNavigation.vue" data-source-line-start="41" data-source-line-end="69"><div class="relative transition-transform duration-300" data-source-file="src/components/common/BottomNavigation.vue" data-source-line-start="53" data-source-line-end="62"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-source-file="src/components/common/SafeIcon.vue" data-source-line-start="43" data-source-line-end="49" class="lucide lucide-user-icon lucide-user"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg><!----></div><span class="text-xs font-medium transition-all duration-300" data-source-file="src/components/common/BottomNavigation.vue" data-source-line-start="63" data-source-line-end="68">我的</span></a><!--]--></div></div></nav><!--astro:end--></astro-island>
+
+  <script>
+    const originalBack = window.history.back
+    const originalForward = window.history.forward
+    const originalGo = window.history.go
+    function isValidNavigation(){
+      if(!window.parent.history.state.back || !window.parent.history.state.back.startsWith(&#39;/designPage&#39;)){
+        return false
+      }
+      return true
+    }
+    window.history.back = function(...args) {
+      if(!isValidNavigation()){
+        return
+      }
+      return originalBack.apply(this, args);
+    };
+
+    window.history.forward = function(...args) {
+      if(!isValidNavigation()){
+        return
+      }
+      return originalForward.apply(this, args);
+    };
+
+    window.history.go = function(...args) {
+      if(!isValidNavigation()){
+        return
+      }
+      return originalGo.apply(this, args);
+    };
+  </script></body></html>'></iframe>
+                    </div>
+                  </div>
+
+                </body>
+                </html>
+            
